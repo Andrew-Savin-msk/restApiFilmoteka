@@ -3,7 +3,7 @@ package apiserver
 import (
 	"net/http"
 
-	"github.com/Andrew-Savin-msk/rest-api-filmoteka/store"
+	"github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/store"
 	"github.com/sirupsen/logrus"
 )
 

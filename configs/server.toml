@@ -1,5 +1,5 @@
-port = "8080"
+port = ":8080"
 db_type = "postgres"
 db_path = "postgresql://postgres:Sassassa12@localhost:5432/filmoteka?sslmode=disable"
-schema_path = "file:///migrations/20240608145718_create_tables.up.sql"
+schema_path = "file://migrations/"
 log_level = "debug"

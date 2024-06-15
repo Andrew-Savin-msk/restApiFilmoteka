@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/config"
-	"github.com/Andrew-Savin-msk/rest-api-filmoteka/store"
-	"github.com/Andrew-Savin-msk/rest-api-filmoteka/store/pgstore"
-	"github.com/golang-migrate/migrate/v4"
+	"github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/store"
+	"github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/store/pgstore"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+
+	// _ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 )
@@ -22,7 +24,7 @@ func Start(cfg *config.Config) error {
 
 	st, err := loadStore(cfg.DbPath, cfg.DbType, cfg.SchemaPath)
 	if err != nil {
-		return fmt.Errorf("unable to connect db. ended with error: %s", err)
+		return fmt.Errorf("unable to init db. ended with error: %s", err)
 	}
 	defer st.Close()
 
@@ -78,15 +80,43 @@ func loadPg(url, migrationsPath string) (store.Store, error) {
 		return nil, err
 	}
 
-	migrations, err := migrate.New(migrationsPath, url)
-	if err != nil {
-		return nil, fmt.Errorf("migrate: %v", err)
-	}
+	// migrations, err := migrate.New(migrationsPath, url)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("migrate: %v", err)
+	// }
 
-	err = migrations.Up()
-	if err != nil {
-		return nil, fmt.Errorf("migrate.up: %v", err)
-	}
+	// err = migrations.Force(20240608145718)
+
+	// if err != nil {
+	// 	return nil, fmt.Errorf("migrate.force: %v", err)
+	// }
+
+	// err = migrations.Up()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("migrate.up: %v", err)
+	// }
 
 	return pgstore.New(db), nil
 }
+
+// func isValidDb(db *sql.DB) (bool, error) {
+// 	tables := ""
+// 	for _, table := range tables {
+// 		var exists bool
+// 		query := fmt.Sprintf(`SELECT EXISTS (
+//             SELECT FROM information_schema.tables
+//             WHERE table_schema = 'public'
+//             AND table_name = '%s'
+//         )`, table)
+
+// 		err := db.QueryRow(query).Scan(&exists)
+// 		if err != nil {
+// 			return false, err
+// 		}
+
+// 		if !exists {
+// 			return false, nil
+// 		}
+// 	}
+// 	return true, nil
+// }
