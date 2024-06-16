@@ -12,14 +12,30 @@ func (s *server) setMuxer() {
 }
 
 func (s *server) handleCreateUser() http.HandlerFunc {
+
+	type request struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := &user.Request{}
+		req := &request{}
 		err := json.NewDecoder(r.Body).Decode(req)
 		if err != nil {
 			s.errorResponse(w, r, http.StatusBadRequest, err)
 		}
 
 		// TODO: Db inter
+
+		u := &user.User{
+			Email:  req.Email,
+			Passwd: req.Password,
+		}
+
+		err = s.store.User().Create(u)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusUnprocessableEntity, err)
+		}
 
 		s.respond(w, r, http.StatusOK, "")
 	}

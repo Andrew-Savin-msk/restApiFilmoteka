@@ -10,22 +10,22 @@ import (
 )
 
 type server struct {
-	srv http.Server
 	mux          *http.ServeMux
 	sessionStore sessions.Store
 	store        store.Store
 	logger       *logrus.Logger
 }
 
-func newServer(st store.Store, cfg *config.Config) server {
-	srv := server{
-		mux:          newMux(),
+func newServer(st store.Store, cfg *config.Config) *server {
+	srv := &server{
+		mux:          http.NewServeMux(),
 		logger:       setLog(cfg.LogLevel),
 		store:        st,
 		sessionStore: sessions.NewCookieStore([]byte(cfg.SessionKey)),
 	}
 
 	// TODO: Set router
+	srv.setMuxer()
 
 	return srv
 }

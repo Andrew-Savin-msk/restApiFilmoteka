@@ -1,13 +1,46 @@
 package user
 
-type Request struct {
-	Email  string `json:"email"`
-	Passwd string `json:"passwd"`
-}
+import (
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
+	"golang.org/x/crypto/bcrypt"
+)
 
 type User struct {
 	Id        int    `json:"id"`
 	Email     string `json:"email"`
 	Passwd    string `json:"passwd,omitempty"`
 	EncPasswd string `json:"-"`
+}
+
+func (u *User) Validate() error {
+	return validation.ValidateStruct(
+		u,
+		validation.Field(&u.Email, validation.Required, is.Email),
+		validation.Field(&u.Passwd, validation.By(requiredIf(u.EncPasswd == "")), validation.Length(3, 20)),
+	)
+}
+
+func (u *User) sanitize() {
+	u.Passwd = ""
+}
+
+func (u *User) Sequre() error {
+	err := error(nil)
+	u.EncPasswd, err = encryptPasswd(u.Passwd)
+	if err != nil {
+		return err
+	}
+
+	u.sanitize()
+
+	return nil
+}
+
+func encryptPasswd(pwd string) (string, error) {
+	enc, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(enc), nil
 }

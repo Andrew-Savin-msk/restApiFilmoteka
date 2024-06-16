@@ -37,13 +37,6 @@ func Start(cfg *config.Config) error {
 	return nil
 }
 
-func newMux() *http.ServeMux {
-	mux := http.NewServeMux()
-	// Place for setting endpoints
-
-	return mux
-}
-
 func setLog(level string) *logrus.Logger {
 	log := logrus.New()
 	switch strings.ToLower(level) {
