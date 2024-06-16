@@ -8,13 +8,14 @@ CREATE TABLE IF NOT EXISTS films (
     id INTEGER PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     description VARCHAR(1000),
+    release_date DATE NOT NULL,
     assesment INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS actors (
     id INTEGER PRIMARY KEY,
     gender VARCHAR(20) NOT NULL,
-    birthday DATE NOT NULL,
+    birthdate DATE NOT NULL,
     film_id INTEGER,
     FOREIGN KEY(film_id) REFERENCES films(id)
 );

@@ -8,6 +8,7 @@ require github.com/stretchr/testify v1.9.0
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.17.1 // indirect
+	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
@@ -18,6 +19,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang-migrate/migrate v3.5.4+incompatible
+	github.com/gorilla/sessions v1.3.0
 	github.com/lib/pq v1.10.9
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.3

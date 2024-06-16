@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	Port       string `toml:"port"`
+	SessionKey string `toml:"session_key"`
 	DbType     string `toml:"db_type"`
 	DbPath     string `toml:"db_path"`
 	SchemaPath string `toml:"schema_path"`

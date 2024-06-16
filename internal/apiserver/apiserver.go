@@ -28,11 +28,7 @@ func Start(cfg *config.Config) error {
 	}
 	defer st.Close()
 
-	srv := server{
-		mux:    newMux(),
-		logger: setLog(cfg.LogLevel),
-		store:  st,
-	}
+	srv := newServer(st, cfg)
 
 	err = http.ListenAndServe(cfg.Port, srv.mux)
 	if err != nil {
@@ -79,6 +75,9 @@ func loadPg(url, migrationsPath string) (store.Store, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Temporary solution
+	_ = migrationsPath
 
 	// migrations, err := migrate.New(migrationsPath, url)
 	// if err != nil {
