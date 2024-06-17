@@ -3,6 +3,7 @@ package apiserver
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -20,10 +21,17 @@ var (
 	sessionName = "user-key"
 )
 
+var (
+	errIncorrectEmailOrPassword = errors.New("incorrect email or password")
+	errNotAuthenticated         = errors.New("not auntificated")
+)
+
 func (s *server) setMuxer() {
-	s.mux.HandleFunc("/create", s.basePaths(s.handleCreateUser()))
-	s.mux.HandleFunc("/get-session", s.basePaths(s.))
+	s.mux.HandleFunc("/register", s.basePaths(s.handleCreateUser()))
+	s.mux.HandleFunc("/authorize", s.basePaths(s.handleGetSession()))
 }
+
+// Path middlewares
 
 func (s *server) basePaths(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -36,16 +44,13 @@ func (s *server) basePaths(next http.HandlerFunc) http.HandlerFunc {
 
 func (s *server) protectedPaths(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next = s.wrapAuthorisation(next)
+		next = s.basePaths(next)
+		next = s.wrapAuthorise(next)
 		next.ServeHTTP(w, r)
 	})
 }
 
-func (s *server) wrapAuthorisation(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-	})
-}
+// Middleware wrappers
 
 func (s *server) wrapSetRequestId(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +81,46 @@ func (s *server) wrapLogRequest(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
+func (s *server) wrapAuthorise(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie(sessionName)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+		}
+
+		s.logger.Info(cookie.Name)
+
+		session, err := s.sessionStore.Get(r, sessionName)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		id, ok := session.Values["user_id"].(int)
+		if !ok {
+			s.errorResponse(w, r, http.StatusUnauthorized, errNotAuthenticated)
+			return
+		}
+
+		u, err := s.store.User().Find(id)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusUnauthorized, errNotAuthenticated)
+			return
+		}
+
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxUserKey, u)))
+	})
+}
+
+// TODO:
+func (s *server) wrapAdminOnly(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	})
+}
+
+// Handlers
+
 func (s *server) handleCreateUser() http.HandlerFunc {
 
 	type request struct {
@@ -84,6 +129,11 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			return
+		}
+
 		req := &request{}
 		err := json.NewDecoder(r.Body).Decode(req)
 		if err != nil {
@@ -92,8 +142,9 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 		}
 
 		u := &model.User{
-			Email:  req.Email,
-			Passwd: req.Password,
+			Email:   req.Email,
+			Passwd:  req.Password,
+			IsAdmin: false,
 		}
 
 		err = s.store.User().Create(u)
@@ -108,26 +159,54 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 
 func (s *server) handleGetSession() http.HandlerFunc {
 	type request struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email  string `json:"email"`
+		Passwd string `json:"password"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			return
+		}
+
 		req := &request{}
-		err := json.NewDecoder(r).Decode(req)
+		err := json.NewDecoder(r.Body).Decode(req)
 		if err != nil {
 			s.errorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
 
-		
+		u, err := s.store.User().FindByEmail(req.Email)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		err = u.CompareHashAndPassword(req.Passwd)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, errIncorrectEmailOrPassword)
+			return
+		}
+
+		session, err := s.sessionStore.Get(r, sessionName)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		session.Values["user_id"] = u.Id
+		err = session.Save(r, w)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, nil)
 	}
 
 }
 
-func (s *server) ServerHTTP(w http.ResponseWriter, r *http.Request) {
-	s.mux.ServeHTTP(w, r)
-}
+// Responses
 
 func (s *server) errorResponse(w http.ResponseWriter, r *http.Request, code int, err error) {
 	s.respond(w, r, code, map[string]string{"error": err.Error()})
@@ -138,4 +217,10 @@ func (s *server) respond(w http.ResponseWriter, r *http.Request, code int, data 
 	if data != nil {
 		json.NewEncoder(w).Encode(data)
 	}
+}
+
+// Interface methods
+
+func (s *server) ServerHTTP(w http.ResponseWriter, r *http.Request) {
+	s.mux.ServeHTTP(w, r)
 }

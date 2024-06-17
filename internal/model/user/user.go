@@ -11,6 +11,7 @@ type User struct {
 	Email     string `json:"email"`
 	Passwd    string `json:"passwd,omitempty"`
 	EncPasswd string `json:"-"`
+	IsAdmin   bool `json:"is_admin"`
 }
 
 func (u *User) Validate() error {
@@ -19,6 +20,10 @@ func (u *User) Validate() error {
 		validation.Field(&u.Email, validation.Required, is.Email),
 		validation.Field(&u.Passwd, validation.By(requiredIf(u.EncPasswd == "")), validation.Length(3, 20)),
 	)
+}
+
+func (u *User) CompareHashAndPassword(password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(u.EncPasswd), []byte(password))
 }
 
 func (u *User) sanitize() {

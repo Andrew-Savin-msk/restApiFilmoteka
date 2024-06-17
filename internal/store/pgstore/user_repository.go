@@ -26,9 +26,10 @@ func (r *UserRepository) Create(u *model.User) error {
 
 	// Save
 	return r.st.db.QueryRow(
-		"INSERT INTO users (email, encrypted_password) VALUES ($1, $2) RETURNING id",
+		"INSERT INTO users (email, encrypted_password, is_admin) VALUES ($1, $2, $3) RETURNING id",
 		u.Email,
 		u.EncPasswd,
+		u.IsAdmin,
 	).Scan(&u.Id)
 }
 
@@ -37,11 +38,12 @@ func (r *UserRepository) Find(id int) (*model.User, error) {
 		Id: id,
 	}
 	err := r.st.db.QueryRow(
-		"SELECT email, encrypted_password FROM users WHERE id = $1",
+		"SELECT email, encrypted_password, is_admin FROM users WHERE id = $1",
 		id,
 	).Scan(
 		&u.Email,
 		&u.EncPasswd,
+		&u.IsAdmin,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -57,11 +59,12 @@ func (r *UserRepository) FindByEmail(email string) (*model.User, error) {
 		Email: email,
 	}
 	err := r.st.db.QueryRow(
-		"SELECT id, encrypted_password FROM users WHERE email = $1",
+		"SELECT id, encrypted_password, is_admin FROM users WHERE email = $1",
 		email,
 	).Scan(
 		&u.Id,
 		&u.EncPasswd,
+		&u.IsAdmin,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
