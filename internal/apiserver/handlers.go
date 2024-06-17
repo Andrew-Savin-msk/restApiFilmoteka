@@ -1,14 +1,61 @@
 package apiserver
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	model "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
+)
+
+const (
+	ctxUserKey = iota
+	ctxRequestKey
 )
 
 func (s *server) setMuxer() {
-	s.mux.HandleFunc("/create", s.handleCreateUser())
+	s.mux.HandleFunc("/create", s.basePaths(s.handleCreateUser()))
+}
+
+func (s *server) basePaths(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Setting all middleware required for basic paths
+		next = s.wrapSetRequestId(next)
+		next = s.wrapLogRequest(next)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *server) wrapSetRequestId(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := uuid.New().String()
+		w.Header().Set("X-Request-Id", id)
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxRequestKey, id)))
+	})
+}
+
+func (s *server) wrapLogRequest(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger := s.logger.WithFields(logrus.Fields{
+			"remote_addr": r.RemoteAddr,
+			"request_id":  r.Context().Value(ctxRequestKey),
+		})
+		logger.Infof("started %s %s", r.Method, r.RequestURI)
+		start := time.Now()
+		rw := &responseWriter{w, http.StatusOK}
+
+		next.ServeHTTP(rw, r)
+
+		logger.Infof(
+			"completed with %v %s in %v",
+			rw.code,
+			http.StatusText(rw.code),
+			time.Since(start),
+		)
+	})
 }
 
 func (s *server) handleCreateUser() http.HandlerFunc {
@@ -23,6 +70,7 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(req)
 		if err != nil {
 			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
 		}
 
 		u := &model.User{
@@ -33,10 +81,15 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 		err = s.store.User().Create(u)
 		if err != nil {
 			s.errorResponse(w, r, http.StatusUnprocessableEntity, err)
+			return
 		}
 
-		s.respond(w, r, http.StatusOK, "")
+		s.respond(w, r, http.StatusOK, u)
 	}
+}
+
+func (s *server) ServerHTTP(w http.ResponseWriter, r *http.Request) {
+	s.mux.ServeHTTP(w, r)
 }
 
 func (s *server) errorResponse(w http.ResponseWriter, r *http.Request, code int, err error) {

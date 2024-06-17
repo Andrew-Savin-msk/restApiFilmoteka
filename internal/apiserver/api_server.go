@@ -30,6 +30,7 @@ func Start(cfg *config.Config) error {
 
 	srv := newServer(st, cfg)
 
+	srv.logger.Infof("Api started work")
 	err = http.ListenAndServe(cfg.Port, srv.mux)
 	if err != nil {
 		return fmt.Errorf("unable to start listening port. ended with error: %s", err)
@@ -47,6 +48,7 @@ func setLog(level string) *logrus.Logger {
 	case "info":
 		log.SetLevel(logrus.InfoLevel)
 	}
+	fmt.Printf("logger set in level: %s \n", level)
 	return log
 }
 
