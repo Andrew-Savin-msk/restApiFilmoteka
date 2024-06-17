@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/models/user"
+	model "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
 )
 
 func (s *server) setMuxer() {
@@ -25,9 +25,7 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 			s.errorResponse(w, r, http.StatusBadRequest, err)
 		}
 
-		// TODO: Db inter
-
-		u := &user.User{
+		u := &model.User{
 			Email:  req.Email,
 			Passwd: req.Password,
 		}

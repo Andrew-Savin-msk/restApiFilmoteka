@@ -1,8 +1,8 @@
 package store
 
-import "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/models/user"
+import model "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
 
 type UserRepository interface {
-	Create(*user.User) error
-	Find(int) (*user.User, error)
+	Create(*model.User) error
+	Find(int) (*model.User, error)
 }
