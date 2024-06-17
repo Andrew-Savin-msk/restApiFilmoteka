@@ -27,13 +27,13 @@ var (
 )
 
 func (s *server) setMuxer() {
-	s.mux.HandleFunc("/register", s.basePaths(s.handleCreateUser()))
-	s.mux.HandleFunc("/authorize", s.basePaths(s.handleGetSession()))
+	s.mux.Handle("/register", s.basePaths(s.handleCreateUser()))
+	s.mux.Handle("/authorize", s.basePaths(s.handleGetSession()))
 }
 
 // Path middlewares
 
-func (s *server) basePaths(next http.HandlerFunc) http.HandlerFunc {
+func (s *server) basePaths(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Setting all middleware required for basic paths
 		next = s.wrapSetRequestId(next)
@@ -42,7 +42,7 @@ func (s *server) basePaths(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
-func (s *server) protectedPaths(next http.HandlerFunc) http.HandlerFunc {
+func (s *server) protectedPaths(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next = s.basePaths(next)
 		next = s.wrapAuthorise(next)
@@ -52,7 +52,7 @@ func (s *server) protectedPaths(next http.HandlerFunc) http.HandlerFunc {
 
 // Middleware wrappers
 
-func (s *server) wrapSetRequestId(next http.HandlerFunc) http.HandlerFunc {
+func (s *server) wrapSetRequestId(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := uuid.New().String()
 		w.Header().Set("X-Request-Id", id)
@@ -60,7 +60,7 @@ func (s *server) wrapSetRequestId(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
-func (s *server) wrapLogRequest(next http.HandlerFunc) http.HandlerFunc {
+func (s *server) wrapLogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logger := s.logger.WithFields(logrus.Fields{
 			"remote_addr": r.RemoteAddr,
@@ -81,7 +81,7 @@ func (s *server) wrapLogRequest(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
-func (s *server) wrapAuthorise(next http.HandlerFunc) http.HandlerFunc {
+func (s *server) wrapAuthorise(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(sessionName)
 		if err != nil {
@@ -113,7 +113,7 @@ func (s *server) wrapAuthorise(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // TODO:
-func (s *server) wrapAdminOnly(next http.HandlerFunc) http.HandlerFunc {
+func (s *server) wrapAdminOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 	})
