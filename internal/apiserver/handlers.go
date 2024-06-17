@@ -16,8 +16,13 @@ const (
 	ctxRequestKey
 )
 
+var (
+	sessionName = "user-key"
+)
+
 func (s *server) setMuxer() {
 	s.mux.HandleFunc("/create", s.basePaths(s.handleCreateUser()))
+	s.mux.HandleFunc("/get-session", s.basePaths(s.))
 }
 
 func (s *server) basePaths(next http.HandlerFunc) http.HandlerFunc {
@@ -26,6 +31,19 @@ func (s *server) basePaths(next http.HandlerFunc) http.HandlerFunc {
 		next = s.wrapSetRequestId(next)
 		next = s.wrapLogRequest(next)
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *server) protectedPaths(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next = s.wrapAuthorisation(next)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *server) wrapAuthorisation(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 	})
 }
 
@@ -86,6 +104,25 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 
 		s.respond(w, r, http.StatusOK, u)
 	}
+}
+
+func (s *server) handleGetSession() http.HandlerFunc {
+	type request struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &request{}
+		err := json.NewDecoder(r).Decode(req)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		
+	}
+
 }
 
 func (s *server) ServerHTTP(w http.ResponseWriter, r *http.Request) {

@@ -11,15 +11,15 @@ type UserRepository struct {
 	st *Store
 }
 
-func (r *UserRepository) Create(req *model.User) error {
+func (r *UserRepository) Create(u *model.User) error {
 	// Validate
-	err := req.Validate()
+	err := u.Validate()
 	if err != nil {
 		return err
 	}
 
 	// Encrypt
-	err = req.Sequre()
+	err = u.Sequre()
 	if err != nil {
 		return err
 	}
@@ -27,9 +27,9 @@ func (r *UserRepository) Create(req *model.User) error {
 	// Save
 	return r.st.db.QueryRow(
 		"INSERT INTO users (email, encrypted_password) VALUES ($1, $2) RETURNING id",
-		req.Email,
-		req.EncPasswd,
-	).Scan(&req.Id)
+		u.Email,
+		u.EncPasswd,
+	).Scan(&u.Id)
 }
 
 func (r *UserRepository) Find(id int) (*model.User, error) {
@@ -41,6 +41,26 @@ func (r *UserRepository) Find(id int) (*model.User, error) {
 		id,
 	).Scan(
 		&u.Email,
+		&u.EncPasswd,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrRecordNotFound
+		}
+		return nil, err
+	}
+	return u, nil
+}
+
+func (r *UserRepository) FindByEmail(email string) (*model.User, error) {
+	u := &model.User{
+		Email: email,
+	}
+	err := r.st.db.QueryRow(
+		"SELECT id, encrypted_password FROM users WHERE email = $1",
+		email,
+	).Scan(
+		&u.Id,
 		&u.EncPasswd,
 	)
 	if err != nil {

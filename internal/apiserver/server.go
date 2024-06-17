@@ -24,7 +24,6 @@ func newServer(st store.Store, cfg *config.Config) *server {
 		sessionStore: sessions.NewCookieStore([]byte(cfg.SessionKey)),
 	}
 
-	// TODO: Set router
 	srv.setMuxer()
 
 	return srv

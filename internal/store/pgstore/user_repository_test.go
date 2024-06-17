@@ -18,3 +18,35 @@ func TestCreate(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, tu)
 }
+
+func TestFind(t *testing.T) {
+	tu := model.TestUser(t)
+	db, clear := pgstore.TestStore(t, dbPath)
+	defer clear("users")
+
+	st := pgstore.New(db)
+
+	err := st.User().Create(tu)
+	assert.NoError(t, err)
+	assert.NotNil(t, tu)
+
+	res, err := st.User().Find(tu.Id)
+	assert.NoError(t, err)
+	assert.Equal(t, res, tu)
+}
+
+func TestFindByEmail(t *testing.T) {
+	tu := model.TestUser(t)
+	db, clear := pgstore.TestStore(t, dbPath)
+	defer clear("users")
+
+	st := pgstore.New(db)
+
+	err := st.User().Create(tu)
+	assert.NoError(t, err)
+	assert.NotNil(t, tu)
+
+	res, err := st.User().FindByEmail(tu.Email)
+	assert.NoError(t, err)
+	assert.Equal(t, res, tu)
+}
