@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
-	model "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
+	actor "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/actor"
+	user "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
 )
 
 const (
@@ -42,7 +44,7 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 			return
 		}
 
-		u := &model.User{
+		u := &user.User{
 			Email:   req.Email,
 			Passwd:  req.Password,
 			IsAdmin: false,
@@ -114,13 +116,49 @@ func (s *server) handleWhoamI() http.HandlerFunc {
 			return
 		}
 
-		u, ok := r.Context().Value(ctxUserKey).(*model.User)
+		u, ok := r.Context().Value(ctxUserKey).(*user.User)
 		if !ok {
 			s.errorResponse(w, r, http.StatusUnprocessableEntity, nil)
 			return
 		}
 
 		s.respond(w, r, http.StatusOK, u)
+	}
+}
+
+func (s *server) handleCreateActor() http.HandlerFunc {
+	type request struct {
+		Name      string `json:"name"`
+		Gen       string `json:"gender"`
+		Birthdate string `json:"birthdate"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			return
+		}
+
+		req := &request{}
+		err := json.NewDecoder(r.Body).Decode(req)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		birth, err := time.Parse("01-02-2006", req.Birthdate)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		act := &actor.Actor{
+			Name:      req.Name,
+			Gen:       req.Gen,
+			Birthdate: birth,
+		}
+		s.logger.Infof("Time: %v", act)
+
+		s.respond(w, r, http.StatusOK, nil)
 	}
 }
 

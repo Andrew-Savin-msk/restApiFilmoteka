@@ -33,4 +33,5 @@ func (s *server) setMuxer() {
 	s.mux.Handle("/register", s.basePaths(s.handleCreateUser()))
 	s.mux.Handle("/authorize", s.basePaths(s.handleGetSession()))
 	s.mux.Handle("/who-am-i", s.protectedPaths(s.handleWhoamI()))
+	s.mux.Handle("/private/create-actor", s.protectedPaths(s.handleCreateActor()))
 }

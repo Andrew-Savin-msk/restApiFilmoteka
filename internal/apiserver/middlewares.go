@@ -13,26 +13,19 @@ import (
 // Path middlewares
 
 func (s *server) basePaths(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Setting all middleware required for basic paths
-		next = s.wrapSetRequestId(next)
-		next = s.wrapLogRequest(next)
-		next.ServeHTTP(w, r)
-	})
+	return s.wrapSetRequestId(s.wrapLogRequest(next))
 }
 
 func (s *server) protectedPaths(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next = s.basePaths(next)
-		next = s.wrapAuthorise(next)
-		next.ServeHTTP(w, r)
-	})
+	return s.wrapAuthorise(s.basePaths(next))
 }
 
-func (s *server) AdminPaths(next http.Handler) http.Handler {
+// Might have some troubles like with base and protected paths
+func (s *server) adminPaths(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next = s.protectedPaths(next)
-		if !r.Context().Value(ctxUserKey).(*model.User).IsAdmin {
+		user, ok := r.Context().Value(ctxUserKey).(*model.User)
+		if !ok || !user.IsAdmin {
 			s.errorResponse(w, r, http.StatusForbidden, nil)
 			return
 		}
@@ -76,6 +69,7 @@ func (s *server) wrapAuthorise(next http.Handler) http.Handler {
 		cookie, err := r.Cookie(sessionName)
 		if err != nil {
 			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
 		}
 
 		s.logger.Info(cookie.Name)
