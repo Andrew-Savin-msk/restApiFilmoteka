@@ -3,7 +3,7 @@ package pgstore
 import (
 	"database/sql"
 
-	model "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
+	user "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
 	"github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/store"
 )
 
@@ -11,7 +11,7 @@ type UserRepository struct {
 	st *Store
 }
 
-func (r *UserRepository) Create(u *model.User) error {
+func (r *UserRepository) Create(u *user.User) error {
 	// Validate
 	err := u.Validate()
 	if err != nil {
@@ -33,8 +33,8 @@ func (r *UserRepository) Create(u *model.User) error {
 	).Scan(&u.Id)
 }
 
-func (r *UserRepository) Find(id int) (*model.User, error) {
-	u := &model.User{
+func (r *UserRepository) Find(id int) (*user.User, error) {
+	u := &user.User{
 		Id: id,
 	}
 	err := r.st.db.QueryRow(
@@ -54,8 +54,8 @@ func (r *UserRepository) Find(id int) (*model.User, error) {
 	return u, nil
 }
 
-func (r *UserRepository) FindByEmail(email string) (*model.User, error) {
-	u := &model.User{
+func (r *UserRepository) FindByEmail(email string) (*user.User, error) {
+	u := &user.User{
 		Email: email,
 	}
 	err := r.st.db.QueryRow(

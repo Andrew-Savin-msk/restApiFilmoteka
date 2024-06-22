@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -17,20 +18,13 @@ func (s *server) basePaths(next http.Handler) http.Handler {
 }
 
 func (s *server) protectedPaths(next http.Handler) http.Handler {
-	return s.wrapAuthorise(s.basePaths(next))
+	return s.basePaths(s.wrapAuthorise(next))
 }
 
+// TODO:
 // Might have some troubles like with base and protected paths
 func (s *server) adminPaths(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next = s.protectedPaths(next)
-		user, ok := r.Context().Value(ctxUserKey).(*model.User)
-		if !ok || !user.IsAdmin {
-			s.errorResponse(w, r, http.StatusForbidden, nil)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+	return s.protectedPaths(s.wrapAdminCheck(next))
 }
 
 // Middleware wrappers
@@ -72,6 +66,7 @@ func (s *server) wrapAuthorise(next http.Handler) http.Handler {
 			return
 		}
 
+		// Delete before production
 		s.logger.Info(cookie.Name)
 
 		session, err := s.sessionStore.Get(r, sessionName)
@@ -93,5 +88,22 @@ func (s *server) wrapAuthorise(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxUserKey, u)))
+	})
+}
+
+func (s *server) wrapAdminCheck(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, ok := r.Context().Value(ctxUserKey).(*model.User)
+		fmt.Printf("User type: %v", user)
+		if !ok {
+			s.errorResponse(w, r, http.StatusUnauthorized, errResourceForbiden)
+			return
+		}
+
+		if !user.IsAdmin {
+			s.errorResponse(w, r, http.StatusForbidden, errResourceForbiden)
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }

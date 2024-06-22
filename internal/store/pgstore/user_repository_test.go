@@ -3,13 +3,13 @@ package pgstore_test
 import (
 	"testing"
 
-	model "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
+	user "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
 	"github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/store/pgstore"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreate(t *testing.T) {
-	tu := model.TestUser(t)
+	tu := user.TestUser(t)
 	db, clear := pgstore.TestStore(t, dbPath)
 	defer clear("users")
 
@@ -20,7 +20,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
-	tu := model.TestUser(t)
+	tu := user.TestUser(t)
 	db, clear := pgstore.TestStore(t, dbPath)
 	defer clear("users")
 
@@ -36,7 +36,7 @@ func TestFind(t *testing.T) {
 }
 
 func TestFindByEmail(t *testing.T) {
-	tu := model.TestUser(t)
+	tu := user.TestUser(t)
 	db, clear := pgstore.TestStore(t, dbPath)
 	defer clear("users")
 

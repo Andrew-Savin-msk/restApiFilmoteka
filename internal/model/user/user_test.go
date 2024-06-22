@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidate(t *testing.T) {
+func TestUserValidate(t *testing.T) {
 	test_cases := []struct {
 		name    string
 		u       func() *model.User

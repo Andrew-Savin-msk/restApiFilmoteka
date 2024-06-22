@@ -30,8 +30,14 @@ func newServer(st store.Store, cfg *config.Config) *server {
 }
 
 func (s *server) setMuxer() {
+	// Public endpoints
 	s.mux.Handle("/register", s.basePaths(s.handleCreateUser()))
 	s.mux.Handle("/authorize", s.basePaths(s.handleGetSession()))
-	s.mux.Handle("/who-am-i", s.protectedPaths(s.handleWhoamI()))
-	s.mux.Handle("/private/create-actor", s.protectedPaths(s.handleCreateActor()))
+	s.mux.Handle("/get-actor", s.basePaths(s.handleGetActor()))
+
+	// Authorisation required endpoints
+	s.mux.Handle("/private/who-am-i", s.protectedPaths(s.handleWhoamI()))
+
+	// Admin rights required endpoints
+	s.mux.Handle("/private/create-actor", s.adminPaths(s.handleCreateActor()))
 }

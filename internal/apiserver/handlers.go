@@ -22,6 +22,7 @@ var (
 var (
 	errIncorrectEmailOrPassword = errors.New("incorrect email or password")
 	errNotAuthenticated         = errors.New("not auntificated")
+	errResourceForbiden         = errors.New("you dont have permossions to get this resource")
 )
 
 func (s *server) handleCreateUser() http.HandlerFunc {
@@ -156,10 +157,36 @@ func (s *server) handleCreateActor() http.HandlerFunc {
 			Gen:       req.Gen,
 			Birthdate: birth,
 		}
-		s.logger.Infof("Time: %v", act)
 
-		s.respond(w, r, http.StatusOK, nil)
+		err = s.store.Actor().Create(act)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusUnprocessableEntity, err)
+		}
+
+		s.respond(w, r, http.StatusOK, act)
 	}
+}
+
+func (s *server) handleGetActor() http.Handler {
+	type request struct {
+		Id int `json:"id"`
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		req := &request{}
+		err := json.NewDecoder(r.Body).Decode(req)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		act, err := s.store.Actor().Find(req.Id)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, act)
+	})
 }
 
 // Interface methods
