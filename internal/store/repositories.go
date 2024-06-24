@@ -14,4 +14,7 @@ type UserRepository interface {
 type ActorRepository interface {
 	Create(*actor.Actor) error
 	Find(int) (*actor.Actor, error)
+	Delete(int) (int, error)
+	Overwright(*actor.Actor) error
+	OverwrightFields(int, map[string]interface{}) error
 }

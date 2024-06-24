@@ -5,10 +5,19 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 )
 
+func TestActorMap(t *testing.T) map[string]interface{} {
+
+	return map[string]interface{}{
+		"name":      "John",
+		"gender":    "man",
+		"birthdate": time.Now(),
+	}
+}
+
 func TestStore(t *testing.T, dbURL string) (*sql.DB, func(...string)) {
-	t.Helper()
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
