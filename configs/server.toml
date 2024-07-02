@@ -3,4 +3,4 @@ session_key = "8109612acafb4ae0ff34f5f1fa549577f4ca3a4a294f559498c111cc7d92973e5
 db_type = "postgres"
 db_path = "postgresql://postgres:Sassassa12@localhost:5432/filmoteka?sslmode=disable"
 schema_path = "file://migrations/"
-log_level = "info"
+log_level = "debug"

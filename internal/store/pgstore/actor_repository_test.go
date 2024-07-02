@@ -56,6 +56,7 @@ func TestDeleteActor(t *testing.T) {
 	assert.Nil(t, tmp)
 }
 
+// TODO: Test func
 func TestOverwrightActor(t *testing.T) {
 	ta := actor.TestActor(t)
 	db, clear := pgstore.TestStore(t, dbPath)
@@ -73,6 +74,7 @@ func TestOverwrightActor(t *testing.T) {
 	assert.Equal(t, err, store.ErrRecordNotFound)
 }
 
+// TODO: Test func
 func TestOverwrightFieldsActor(t *testing.T) {
 	ta := actor.TestActor(t)
 	db, clear := pgstore.TestStore(t, dbPath)
@@ -82,4 +84,9 @@ func TestOverwrightFieldsActor(t *testing.T) {
 	err := st.Actor().Create(ta)
 	assert.NoError(t, err)
 	assert.NotNil(t, ta)
+}
+
+// TODO: Test func
+func TestGetAll(t *testing.T) {
+	
 }

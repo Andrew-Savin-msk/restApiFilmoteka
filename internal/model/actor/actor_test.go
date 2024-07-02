@@ -41,7 +41,7 @@ func TestActorValidate(t *testing.T) {
 			isValid: false,
 		},
 		{
-			name: "short birthdate",
+			name: "default birthdate",
 			a: func() *actor.Actor {
 				a := actor.TestActor(t)
 				a.Birthdate = time.Time{}

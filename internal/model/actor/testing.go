@@ -9,7 +9,7 @@ import (
 
 func TestActor(t *testing.T) *Actor {
 
-	birth, err := time.Parse("01-02-2006", "10-24-2024")
+	birth, err := time.Parse("01-02-2006", "01-01-2001")
 	assert.NoError(t, err)
 	assert.NotNil(t, birth)
 

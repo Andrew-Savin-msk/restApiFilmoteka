@@ -2,7 +2,6 @@ package apiserver
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -21,8 +20,6 @@ func (s *server) protectedPaths(next http.Handler) http.Handler {
 	return s.basePaths(s.wrapAuthorise(next))
 }
 
-// TODO:
-// Might have some troubles like with base and protected paths
 func (s *server) adminPaths(next http.Handler) http.Handler {
 	return s.protectedPaths(s.wrapAdminCheck(next))
 }
@@ -66,10 +63,7 @@ func (s *server) wrapAuthorise(next http.Handler) http.Handler {
 			return
 		}
 
-		// Delete before production
-		s.logger.Info(cookie.Name)
-
-		session, err := s.sessionStore.Get(r, sessionName)
+		session, err := s.sessionStore.Get(r, cookie.Name)
 		if err != nil {
 			s.errorResponse(w, r, http.StatusInternalServerError, err)
 			return
@@ -94,7 +88,7 @@ func (s *server) wrapAuthorise(next http.Handler) http.Handler {
 func (s *server) wrapAdminCheck(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok := r.Context().Value(ctxUserKey).(*model.User)
-		fmt.Printf("User type: %v", user)
+		s.logger.Debugf("Authorised user: %v", user)
 		if !ok {
 			s.errorResponse(w, r, http.StatusUnauthorized, errResourceForbiden)
 			return

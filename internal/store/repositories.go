@@ -16,5 +16,6 @@ type ActorRepository interface {
 	Find(int) (*actor.Actor, error)
 	Delete(int) (int, error)
 	Overwright(*actor.Actor) error
-	OverwrightFields(int, map[string]interface{}) error
+	FindByNamePart(string) (*actor.Actor, error)
+	GetAll() ([]*actor.Actor, error)
 }

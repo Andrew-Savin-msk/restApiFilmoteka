@@ -3,12 +3,14 @@ package apiserver
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
 	actor "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/actor"
 	user "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
 	"github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/store"
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 const (
@@ -238,7 +240,7 @@ func (s *server) handleOverwrightActor() http.Handler {
 		Birthdate string `json:"birthdate"`
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPut {
+		if r.Method != http.MethodPut && r.Method != http.MethodPatch {
 			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
 			return
 		}
@@ -249,22 +251,41 @@ func (s *server) handleOverwrightActor() http.Handler {
 			return
 		}
 
-		birth, err := time.Parse("01-02-2006", req.Birthdate)
-		if err != nil {
-			s.errorResponse(w, r, http.StatusBadRequest, err)
-			return
-		}
-
 		act := &actor.Actor{
-			Id:        req.Id,
-			Name:      req.Name,
-			Gen:       req.Gen,
-			Birthdate: birth,
+			Id:   req.Id,
+			Name: req.Name,
+			Gen:  req.Gen,
 		}
 
-		err = act.Validate()
-		if err != nil {
-			s.errorResponse(w, r, http.StatusBadRequest, err)
+		if req.Birthdate == "" {
+			if r.Method == http.MethodPut {
+				s.errorResponse(w, r, http.StatusBadRequest, fmt.Errorf("invalid date"))
+				return
+			}
+		} else {
+			birth, err := time.Parse("01-02-2006", req.Birthdate)
+			if err != nil {
+				s.errorResponse(w, r, http.StatusBadRequest, err)
+				return
+			}
+
+			err = validation.ValidateStruct(
+				act,
+				validation.Field(&act.Birthdate, validation.By(actor.IsDateValid())),
+			)
+			if err != nil {
+				s.errorResponse(w, r, http.StatusBadRequest, err)
+			}
+
+			act.Birthdate = birth
+		}
+
+		if r.Method == http.MethodPut {
+			err = act.Validate()
+			if err != nil {
+				s.errorResponse(w, r, http.StatusBadRequest, err)
+				return
+			}
 		}
 
 		err = s.store.Actor().Overwright(act)
@@ -282,31 +303,21 @@ func (s *server) handleOverwrightActor() http.Handler {
 }
 
 // TODO:
-func (s *server) handleOvewrightActorFields() http.Handler {
+func (s *server) handleGetActorByNamePart() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPatch {
-			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
-			return
-		}
-		req := map[string]interface{}{}
-		err := json.NewDecoder(r.Body).Decode(req)
+
+	})
+}
+
+func (s *server) handleGetActors() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		actors, err := s.store.Actor().GetAll()
 		if err != nil {
-			s.errorResponse(w, r, http.StatusBadRequest, err)
+			s.errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 
-		id, ok := req["id"].(int)
-		if !ok {
-			s.errorResponse(w, r, http.StatusBadRequest, errIncorrectId)
-			return
-		}
-
-		delete(req, "id")
-
-		err = s.store.Actor().OverwrightFields(id, req)
-		if err != nil {
-
-		}
+		s.respond(w, r, http.StatusOK, actors)
 	})
 }
 
