@@ -28,6 +28,7 @@ var (
 	errNotAuthenticated         = errors.New("not auntificated")
 	errResourceForbiden         = errors.New("you dont have permossions to get this resource")
 	errIncorrectId              = errors.New("presented incorrect id type")
+	errMethodNotAllowed         = fmt.Errorf("unsuportable method type")
 )
 
 func (s *server) handleCreateUser() http.HandlerFunc {
@@ -39,7 +40,7 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 			return
 		}
 
@@ -74,7 +75,7 @@ func (s *server) handleGetSession() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 			return
 		}
 
@@ -118,13 +119,13 @@ func (s *server) handleGetSession() http.HandlerFunc {
 func (s *server) handleWhoamI() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 			return
 		}
 
 		u, ok := r.Context().Value(ctxUserKey).(*user.User)
 		if !ok {
-			s.errorResponse(w, r, http.StatusUnprocessableEntity, nil)
+			s.errorResponse(w, r, http.StatusUnprocessableEntity, errNotAuthenticated)
 			return
 		}
 
@@ -140,7 +141,7 @@ func (s *server) handleCreateActor() http.HandlerFunc {
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 			return
 		}
 
@@ -166,11 +167,13 @@ func (s *server) handleCreateActor() http.HandlerFunc {
 		err = act.Validate()
 		if err != nil {
 			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
 		}
 
 		err = s.store.Actor().Create(act)
 		if err != nil {
 			s.errorResponse(w, r, http.StatusUnprocessableEntity, err)
+			return
 		}
 
 		s.respond(w, r, http.StatusOK, act.Id)
@@ -183,7 +186,7 @@ func (s *server) handleGetActor() http.Handler {
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 			return
 		}
 
@@ -210,7 +213,7 @@ func (s *server) handleDeleteActor() http.Handler {
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
-			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 			return
 		}
 		req := &request{}
@@ -242,7 +245,7 @@ func (s *server) handleOverwrightActor() http.Handler {
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut && r.Method != http.MethodPatch {
-			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 			return
 		}
 		req := &request{}
@@ -335,7 +338,7 @@ func (s *server) handleCreateFilm() http.Handler {
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 			return
 		}
 
@@ -360,15 +363,44 @@ func (s *server) handleCreateFilm() http.Handler {
 			Assesment: req.Assesment,
 		}
 
-		err = s.store.Film().Create(film)
+		fmt.Println(req, film)
+
+		err = s.store.Film().CreateAndConnectActors(film, req.Actors)
 		if err != nil {
-			s.errorResponse(w, r, http.StatusBadRequest, err)
+			s.errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 
 		// TODO: Create film and actors connections
 
 		s.respond(w, r, http.StatusOK, film.Id)
+	})
+}
+
+func (s *server) handleDeleteFilm() http.Handler {
+	type request struct {
+		Id int `json:"id"`
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+			return
+		}
+
+		req := &request{}
+		err := json.NewDecoder(r.Body).Decode(req)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		id, err := s.store.Film().Delete(req.Id)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, id)
 	})
 }
 

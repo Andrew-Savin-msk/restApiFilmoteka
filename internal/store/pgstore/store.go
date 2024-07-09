@@ -7,10 +7,11 @@ import (
 )
 
 type Store struct {
-	db *sql.DB
-	ur *UserRepository
-	ar *ActorRepository
-	fr *FilmRepository
+	db  *sql.DB
+	ur  *UserRepository
+	ar  *ActorRepository
+	fr  *FilmRepository
+	far *FilmActorRepository
 }
 
 func New(db *sql.DB) *Store {
@@ -48,4 +49,13 @@ func (s *Store) Film() store.FilmRepository {
 		}
 	}
 	return s.fr
+}
+
+func (s *Store) FilmActor() store.FilmActorRepository {
+	if s.far == nil {
+		s.far = &FilmActorRepository{
+			st: s,
+		}
+	}
+	return s.far
 }

@@ -5,4 +5,5 @@ type Store interface {
 	User() UserRepository
 	Actor() ActorRepository
 	Film() FilmRepository
+	FilmActor() FilmActorRepository
 }

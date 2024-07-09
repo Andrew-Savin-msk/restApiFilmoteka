@@ -66,7 +66,7 @@ func (a *ActorRepository) Delete(id int) (int, error) {
 	if rows == 0 {
 		return -1, store.ErrRecordNotFound
 	}
-	return id, nil
+	return int(rows), nil
 }
 
 func (a *ActorRepository) Overwright(act *actor.Actor) error {

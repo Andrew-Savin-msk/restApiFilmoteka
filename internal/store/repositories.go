@@ -1,6 +1,8 @@
 package store
 
 import (
+	"database/sql"
+
 	actor "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/actor"
 	film "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/film"
 	user "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
@@ -21,11 +23,12 @@ type ActorRepository interface {
 }
 
 type FilmRepository interface {
-	Create(*film.Film) error
+	CreateAndConnectActors(*film.Film, []int) error
+	Delete(int) (int, error)
 }
 
 type FilmActorRepository interface {
-	Create([]int, int) (error)
+	CreateConnections(*sql.Tx, []int, int) error
 }
 
 // TODO: FilmsActors repository
