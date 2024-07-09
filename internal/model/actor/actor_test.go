@@ -17,7 +17,7 @@ func TestActorValidate(t *testing.T) {
 		{
 			name: "valid",
 			a: func() *actor.Actor {
-				a := actor.TestActor(t)
+				a := actor.TestActor()
 				return a
 			},
 			isValid: true,
@@ -25,7 +25,7 @@ func TestActorValidate(t *testing.T) {
 		{
 			name: "empty name",
 			a: func() *actor.Actor {
-				a := actor.TestActor(t)
+				a := actor.TestActor()
 				a.Name = ""
 				return a
 			},
@@ -34,7 +34,7 @@ func TestActorValidate(t *testing.T) {
 		{
 			name: "empty password",
 			a: func() *actor.Actor {
-				a := actor.TestActor(t)
+				a := actor.TestActor()
 				a.Gen = ""
 				return a
 			},
@@ -43,7 +43,7 @@ func TestActorValidate(t *testing.T) {
 		{
 			name: "default birthdate",
 			a: func() *actor.Actor {
-				a := actor.TestActor(t)
+				a := actor.TestActor()
 				a.Birthdate = time.Time{}
 				return a
 			},

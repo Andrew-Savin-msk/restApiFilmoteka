@@ -3,12 +3,12 @@ package pgstore
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
-	"testing"
 	"time"
 )
 
-func TestActorMap(t *testing.T) map[string]interface{} {
+func TestActorMap() map[string]interface{} {
 
 	return map[string]interface{}{
 		"name":      "John",
@@ -17,16 +17,16 @@ func TestActorMap(t *testing.T) map[string]interface{} {
 	}
 }
 
-func TestStore(t *testing.T, dbURL string) (*sql.DB, func(...string)) {
+func TestStore(dbURL string) (*sql.DB, func(...string)) {
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 
 	err = db.Ping()
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 
 	return db, func(s ...string) {

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	actor "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/actor"
+	film "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/film"
 	user "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
 	"github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/store"
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -269,15 +270,16 @@ func (s *server) handleOverwrightActor() http.Handler {
 				return
 			}
 
+			act.Birthdate = birth
+
 			err = validation.ValidateStruct(
 				act,
 				validation.Field(&act.Birthdate, validation.By(actor.IsDateValid())),
 			)
 			if err != nil {
 				s.errorResponse(w, r, http.StatusBadRequest, err)
+				return
 			}
-
-			act.Birthdate = birth
 		}
 
 		if r.Method == http.MethodPut {
@@ -309,6 +311,7 @@ func (s *server) handleGetActorByNamePart() http.Handler {
 	})
 }
 
+// TODO: Actors must be returned with their films
 func (s *server) handleGetActors() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		actors, err := s.store.Actor().GetAll()
@@ -318,6 +321,54 @@ func (s *server) handleGetActors() http.Handler {
 		}
 
 		s.respond(w, r, http.StatusOK, actors)
+	})
+}
+
+func (s *server) handleCreateFilm() http.Handler {
+	type request struct {
+		Id        int     `json:"id"`
+		Name      string  `json:"name"`
+		Desc      string  `json:"description,omitempty"`
+		Date      string  `json:"release_date"`
+		Assesment float32 `json:"assesment"`
+		Actors    []int   `json:"actors"`
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, nil)
+			return
+		}
+
+		req := &request{}
+
+		err := json.NewDecoder(r.Body).Decode(req)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		date, err := time.Parse("01-02-2006", req.Date)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		film := &film.Film{
+			Name:      req.Name,
+			Desc:      req.Desc,
+			Date:      date,
+			Assesment: req.Assesment,
+		}
+
+		err = s.store.Film().Create(film)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		// TODO: Create film and actors connections
+
+		s.respond(w, r, http.StatusOK, film.Id)
 	})
 }
 

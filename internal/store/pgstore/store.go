@@ -10,6 +10,7 @@ type Store struct {
 	db *sql.DB
 	ur *UserRepository
 	ar *ActorRepository
+	fr *FilmRepository
 }
 
 func New(db *sql.DB) *Store {
@@ -38,4 +39,13 @@ func (s *Store) Actor() store.ActorRepository {
 		}
 	}
 	return s.ar
+}
+
+func (s *Store) Film() store.FilmRepository {
+	if s.fr == nil {
+		s.fr = &FilmRepository{
+			st: s,
+		}
+	}
+	return s.fr
 }

@@ -10,8 +10,8 @@ import (
 )
 
 func TestActorCreate(t *testing.T) {
-	ta := actor.TestActor(t)
-	db, clear := pgstore.TestStore(t, dbPath)
+	ta := actor.TestActor()
+	db, clear := pgstore.TestStore(dbPath)
 	defer clear("actors")
 
 	st := pgstore.New(db)
@@ -21,8 +21,8 @@ func TestActorCreate(t *testing.T) {
 }
 
 func TestFindActor(t *testing.T) {
-	ta := actor.TestActor(t)
-	db, clear := pgstore.TestStore(t, dbPath)
+	ta := actor.TestActor()
+	db, clear := pgstore.TestStore(dbPath)
 	defer clear("actors")
 
 	st := pgstore.New(db)
@@ -38,8 +38,8 @@ func TestFindActor(t *testing.T) {
 }
 
 func TestDeleteActor(t *testing.T) {
-	ta := actor.TestActor(t)
-	db, clear := pgstore.TestStore(t, dbPath)
+	ta := actor.TestActor()
+	db, clear := pgstore.TestStore(dbPath)
 	defer clear("actors")
 
 	st := pgstore.New(db)
@@ -58,8 +58,8 @@ func TestDeleteActor(t *testing.T) {
 
 // TODO: Test func
 func TestOverwrightActor(t *testing.T) {
-	ta := actor.TestActor(t)
-	db, clear := pgstore.TestStore(t, dbPath)
+	ta := actor.TestActor()
+	db, clear := pgstore.TestStore(dbPath)
 	defer clear("actors")
 
 	st := pgstore.New(db)
@@ -76,8 +76,8 @@ func TestOverwrightActor(t *testing.T) {
 
 // TODO: Test func
 func TestOverwrightFieldsActor(t *testing.T) {
-	ta := actor.TestActor(t)
-	db, clear := pgstore.TestStore(t, dbPath)
+	ta := actor.TestActor()
+	db, clear := pgstore.TestStore(dbPath)
 	defer clear("actors")
 
 	st := pgstore.New(db)
@@ -88,5 +88,5 @@ func TestOverwrightFieldsActor(t *testing.T) {
 
 // TODO: Test func
 func TestGetAll(t *testing.T) {
-	
+
 }

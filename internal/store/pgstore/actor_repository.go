@@ -17,6 +17,7 @@ func (a *ActorRepository) Create(act *actor.Actor) error {
 		return err
 	}
 
+	// TODO: Change to Exec statment
 	return a.st.db.QueryRow(
 		"INSERT INTO actors (name, gender, birthdate) VALUES ($1, $2, $3) RETURNING id",
 		act.Name,
@@ -54,6 +55,9 @@ func (a *ActorRepository) Delete(id int) (int, error) {
 		"DELETE FROM actors WHERE id = $1",
 		id,
 	)
+	if err != nil {
+		return -1, err
+	}
 
 	rows, err := res.RowsAffected()
 	if err != nil {
@@ -93,11 +97,7 @@ func (a *ActorRepository) Overwright(act *actor.Actor) error {
 	return nil
 }
 
-// TODO:
-func (a *ActorRepository) FindByNamePart(name string) (*actor.Actor, error) {
-	return nil, nil
-}
-
+// TODO: Actors must be returned with their films
 func (a *ActorRepository) GetAll() ([]*actor.Actor, error) {
 	actors := []*actor.Actor{}
 	rows, err := a.st.db.Query(

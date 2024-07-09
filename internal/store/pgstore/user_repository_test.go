@@ -9,8 +9,8 @@ import (
 )
 
 func TestCreate(t *testing.T) {
-	tu := user.TestUser(t)
-	db, clear := pgstore.TestStore(t, dbPath)
+	tu := user.TestUser()
+	db, clear := pgstore.TestStore(dbPath)
 	defer clear("users")
 
 	st := pgstore.New(db)
@@ -20,8 +20,8 @@ func TestCreate(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
-	tu := user.TestUser(t)
-	db, clear := pgstore.TestStore(t, dbPath)
+	tu := user.TestUser()
+	db, clear := pgstore.TestStore(dbPath)
 	defer clear("users")
 
 	st := pgstore.New(db)
@@ -36,8 +36,8 @@ func TestFind(t *testing.T) {
 }
 
 func TestFindByEmail(t *testing.T) {
-	tu := user.TestUser(t)
-	db, clear := pgstore.TestStore(t, dbPath)
+	tu := user.TestUser()
+	db, clear := pgstore.TestStore(dbPath)
 	defer clear("users")
 
 	st := pgstore.New(db)
