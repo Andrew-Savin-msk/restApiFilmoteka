@@ -3,6 +3,8 @@ package pgstore
 import (
 	"database/sql"
 	"fmt"
+
+	film "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/film"
 )
 
 type FilmActorRepository struct {
@@ -33,4 +35,30 @@ func (far *FilmActorRepository) CreateConnections(tx *sql.Tx, actors []int, film
 	}
 
 	return nil
+}
+
+// TODO:
+func (far *FilmActorRepository) GetActorsFilms(id int) ([]*film.Film, error) {
+	films := []*film.Film{}
+	rows, err := far.st.db.Query(
+		"SELECT f.id, f.name, f.description, f.release_date, f.assesment FROM films_actors AS fa "+
+			"JOIN films AS f ON fa.film_id = f.id "+
+			"WHERE fa.actor_id = $1 LIMIT 5",
+		id,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var film film.Film
+		err := rows.Scan(&film.Id, &film.Name, &film.Desc, &film.Date, &film.Assesment)
+		if err != nil {
+			return nil, err
+		}
+		films = append(films, &film)
+	}
+
+	return films, nil
 }

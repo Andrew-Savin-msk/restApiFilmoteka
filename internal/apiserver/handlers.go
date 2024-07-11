@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	model "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model"
 	actor "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/actor"
 	film "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/film"
 	user "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/user"
@@ -28,7 +29,7 @@ var (
 	errNotAuthenticated         = errors.New("not auntificated")
 	errResourceForbiden         = errors.New("you dont have permossions to get this resource")
 	errIncorrectId              = errors.New("presented incorrect id type")
-	errMethodNotAllowed         = fmt.Errorf("unsuportable method type")
+	errMethodNotAllowed         = errors.New("unsuportable method type")
 )
 
 func (s *server) handleCreateUser() http.HandlerFunc {
@@ -235,7 +236,6 @@ func (s *server) handleDeleteActor() http.Handler {
 	})
 }
 
-// TODO: Maybe do through PATCH and PUT methods
 func (s *server) handleOverwrightActor() http.Handler {
 	type request struct {
 		Id        int    `json:"id"`
@@ -277,7 +277,8 @@ func (s *server) handleOverwrightActor() http.Handler {
 
 			err = validation.ValidateStruct(
 				act,
-				validation.Field(&act.Birthdate, validation.By(actor.IsDateValid())),
+				validation.Field(&act.Id, validation.Required),
+				validation.Field(&act.Birthdate, validation.By(model.IsDateValid())),
 			)
 			if err != nil {
 				s.errorResponse(w, r, http.StatusBadRequest, err)
@@ -307,23 +308,32 @@ func (s *server) handleOverwrightActor() http.Handler {
 	})
 }
 
-// TODO:
-func (s *server) handleGetActorByNamePart() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-	})
-}
-
 // TODO: Actors must be returned with their films
 func (s *server) handleGetActors() http.Handler {
+	type respond struct {
+		Act   *actor.Actor `json:"actor"`
+		Films []*film.Film `json:"films"`
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		actors, err := s.store.Actor().GetAll()
+		if r.Method != http.MethodGet {
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+			return
+		}
+
+		actors, err := s.store.Actor().GetActorsWithFilms()
 		if err != nil {
 			s.errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 
-		s.respond(w, r, http.StatusOK, actors)
+		res := []respond{}
+		for actor, films := range actors {
+			res = append(res, respond{Act: actor, Films: films})
+			fmt.Println(actor, films)
+		}
+
+		s.respond(w, r, http.StatusOK, res)
 	})
 }
 
@@ -371,8 +381,6 @@ func (s *server) handleCreateFilm() http.Handler {
 			return
 		}
 
-		// TODO: Create film and actors connections
-
 		s.respond(w, r, http.StatusOK, film.Id)
 	})
 }
@@ -401,6 +409,81 @@ func (s *server) handleDeleteFilm() http.Handler {
 		}
 
 		s.respond(w, r, http.StatusOK, id)
+	})
+}
+
+// TODO: This handler doesn't update info about actors binded to films, so fix it
+func (s *server) handleOverwrightFilm() http.Handler {
+	type request struct {
+		Id        int     `json:"id"`
+		Name      string  `json:"name"`
+		Desc      string  `json:"description"`
+		Date      string  `json:"release_date"`
+		Assesment float32 `json:"assesment"`
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut && r.Method != http.MethodPatch {
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+			return
+		}
+		req := &request{}
+		err := json.NewDecoder(r.Body).Decode(req)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		film := &film.Film{
+			Id:        req.Id,
+			Name:      req.Name,
+			Desc:      req.Desc,
+			Assesment: req.Assesment,
+		}
+
+		if req.Date == "" {
+			if r.Method == http.MethodPut {
+				s.errorResponse(w, r, http.StatusBadRequest, fmt.Errorf("invalid date"))
+				return
+			}
+		} else {
+			birth, err := time.Parse("01-02-2006", req.Date)
+			if err != nil {
+				s.errorResponse(w, r, http.StatusBadRequest, err)
+				return
+			}
+
+			film.Date = birth
+
+			err = validation.ValidateStruct(
+				film,
+				validation.Field(&film.Id, validation.Required),
+				validation.Field(&film.Date, validation.By(model.IsDateValid())),
+			)
+			if err != nil {
+				s.errorResponse(w, r, http.StatusBadRequest, err)
+				return
+			}
+		}
+
+		if r.Method == http.MethodPut {
+			err = film.Validate()
+			if err != nil {
+				s.errorResponse(w, r, http.StatusBadRequest, err)
+				return
+			}
+		}
+
+		err = s.store.Film().Overwright(film)
+		if err != nil {
+			if err == store.ErrRecordNotFound {
+				s.respond(w, r, http.StatusOK, "")
+				return
+			}
+			s.errorResponse(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, "")
 	})
 }
 

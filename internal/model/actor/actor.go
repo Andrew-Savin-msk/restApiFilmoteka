@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	model "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
@@ -18,6 +19,6 @@ func (a *Actor) Validate() error {
 		a,
 		validation.Field(&a.Name, validation.Required, validation.Length(1, 150)),
 		validation.Field(&a.Gen, validation.Required),
-		validation.Field(&a.Birthdate, validation.By(IsDateValid()), validation.Required),
+		validation.Field(&a.Birthdate, validation.By(model.IsDateValid()), validation.Required),
 	)
 }

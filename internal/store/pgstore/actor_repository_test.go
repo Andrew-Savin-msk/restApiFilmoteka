@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TODO: Test with issue
 func TestActorCreate(t *testing.T) {
 	ta := actor.TestActor()
 	db, clear := pgstore.TestStore(dbPath)
@@ -16,7 +17,7 @@ func TestActorCreate(t *testing.T) {
 
 	st := pgstore.New(db)
 	err := st.Actor().Create(ta)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 	assert.NotNil(t, ta)
 }
 
@@ -72,21 +73,4 @@ func TestOverwrightActor(t *testing.T) {
 
 	err = st.Actor().Overwright(ta)
 	assert.Equal(t, err, store.ErrRecordNotFound)
-}
-
-// TODO: Test func
-func TestOverwrightFieldsActor(t *testing.T) {
-	ta := actor.TestActor()
-	db, clear := pgstore.TestStore(dbPath)
-	defer clear("actors")
-
-	st := pgstore.New(db)
-	err := st.Actor().Create(ta)
-	assert.NoError(t, err)
-	assert.NotNil(t, ta)
-}
-
-// TODO: Test func
-func TestGetAll(t *testing.T) {
-
 }

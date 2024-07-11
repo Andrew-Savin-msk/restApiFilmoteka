@@ -45,4 +45,5 @@ func (s *server) setMuxer() {
 	s.mux.Handle("/private/update-actor", s.adminPaths(s.handleOverwrightActor()))
 	s.mux.Handle("/private/post-film", s.adminPaths(s.handleCreateFilm()))
 	s.mux.Handle("/private/delete-film", s.adminPaths(s.handleDeleteFilm()))
+	s.mux.Handle("/private/update-film", s.adminPaths(s.handleOverwrightFilm()))
 }

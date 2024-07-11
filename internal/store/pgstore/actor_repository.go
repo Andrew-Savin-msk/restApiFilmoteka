@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	actor "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/actor"
+	film "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/film"
 	"github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/store"
 )
 
@@ -97,11 +98,10 @@ func (a *ActorRepository) Overwright(act *actor.Actor) error {
 	return nil
 }
 
-// TODO: Actors must be returned with their films
-func (a *ActorRepository) GetAll() ([]*actor.Actor, error) {
-	actors := []*actor.Actor{}
+func (a *ActorRepository) GetActorsWithFilms() (map[*actor.Actor][]*film.Film, error) {
+	result := map[*actor.Actor][]*film.Film{}
 	rows, err := a.st.db.Query(
-		"SELECT id, name, gender, birthdate FROM actors LIMIT 20",
+		"SELECT id, name, gender, birthdate FROM actors LIMIT 5",
 	)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,12 @@ func (a *ActorRepository) GetAll() ([]*actor.Actor, error) {
 		if err != nil {
 			return nil, err
 		}
-		actors = append(actors, &actor)
+		films, err := a.st.FilmActor().GetActorsFilms(actor.Id)
+		if err != nil {
+			return nil, err
+		}
+		result[&actor] = films
 	}
-	return actors, nil
+
+	return result, nil
 }

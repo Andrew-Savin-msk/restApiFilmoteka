@@ -66,3 +66,33 @@ func (f *FilmRepository) Delete(id int) (int, error) {
 
 	return int(am), nil
 }
+
+func (fa *FilmRepository) Overwright(film *film.Film) error {
+	res, err := fa.st.db.Exec(
+		"UPDATE films SET "+
+			"name = CASE WHEN name <> $1 AND $1 <> '' THEN $1 ELSE name END, "+
+			"description = CASE WHEN description <> $2 AND $2 <> '' THEN $2 ELSE description END, "+
+			"release_date = CASE WHEN release_date <> $3 AND $4 IS NOT FALSE THEN $3 ELSE release_date END, "+
+			"assesment = CASE WHEN assesment <> $5 AND assesment BETWEEN 0 AND 10 THEN $5 ELSE assesment END "+
+			"WHERE id = $6",
+		film.Name,
+		film.Desc,
+		film.Date,
+		film.Date.IsZero(),
+		film.Assesment,
+		film.Id,
+	)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return store.ErrRecordNotFound
+	}
+
+	return nil
+}

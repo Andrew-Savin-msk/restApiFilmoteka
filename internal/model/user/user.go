@@ -11,7 +11,7 @@ type User struct {
 	Email     string `json:"email"`
 	Passwd    string `json:"passwd,omitempty"`
 	EncPasswd string `json:"-"`
-	IsAdmin   bool `json:"is_admin"`
+	IsAdmin   bool   `json:"is_admin"`
 }
 
 func (u *User) Validate() error {

@@ -19,16 +19,18 @@ type ActorRepository interface {
 	Find(int) (*actor.Actor, error)
 	Delete(int) (int, error)
 	Overwright(*actor.Actor) error
-	GetAll() ([]*actor.Actor, error)
+	GetActorsWithFilms() (map[*actor.Actor][]*film.Film, error)
 }
 
 type FilmRepository interface {
 	CreateAndConnectActors(*film.Film, []int) error
 	Delete(int) (int, error)
+	Overwright(*film.Film) error
 }
 
 type FilmActorRepository interface {
 	CreateConnections(*sql.Tx, []int, int) error
+	GetActorsFilms(int) ([]*film.Film, error)
 }
 
 // TODO: FilmsActors repository
