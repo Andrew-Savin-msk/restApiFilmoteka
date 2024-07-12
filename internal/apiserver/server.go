@@ -35,6 +35,7 @@ func (s *server) setMuxer() {
 	s.mux.Handle("/authorize", s.basePaths(s.handleGetSession()))
 	s.mux.Handle("/get-actor", s.basePaths(s.handleGetActor()))
 	s.mux.Handle("/get-actors", s.basePaths(s.handleGetActors()))
+	s.mux.Handle("/films", s.basePaths(s.handleFindFilmByNamePart()))
 
 	// Authorisation required endpoints
 	s.mux.Handle("/private/who-am-i", s.protectedPaths(s.handleWhoamI()))

@@ -487,6 +487,36 @@ func (s *server) handleOverwrightFilm() http.Handler {
 	})
 }
 
+func (s *server) handleFindFilmByNamePart() http.Handler {
+	type request struct {
+		NamePart string `json:"name_part"`
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut && r.Method != http.MethodPatch {
+			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+			return
+		}
+		req := &request{}
+		err := json.NewDecoder(r.Body).Decode(req)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		film, err := s.store.Film().FindByNamePart(req.NamePart)
+		if err != nil {
+			if err == store.ErrRecordNotFound {
+				s.respond(w, r, http.StatusOK, struct{}{})
+				return
+			}
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, film)
+	})
+}
+
 // Interface methods
 
 func (s *server) ServerHTTP(w http.ResponseWriter, r *http.Request) {

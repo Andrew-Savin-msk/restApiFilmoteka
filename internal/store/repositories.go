@@ -26,6 +26,7 @@ type FilmRepository interface {
 	CreateAndConnectActors(*film.Film, []int) error
 	Delete(int) (int, error)
 	Overwright(*film.Film) error
+	FindByNamePart(string) (*film.Film, error)
 }
 
 type FilmActorRepository interface {

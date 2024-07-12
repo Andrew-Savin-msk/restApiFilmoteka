@@ -1,6 +1,7 @@
 package pgstore
 
 import (
+	"database/sql"
 	"fmt"
 
 	film "github.com/Andrew-Savin-msk/rest-api-filmoteka/internal/model/film"
@@ -67,8 +68,8 @@ func (f *FilmRepository) Delete(id int) (int, error) {
 	return int(am), nil
 }
 
-func (fa *FilmRepository) Overwright(film *film.Film) error {
-	res, err := fa.st.db.Exec(
+func (f *FilmRepository) Overwright(film *film.Film) error {
+	res, err := f.st.db.Exec(
 		"UPDATE films SET "+
 			"name = CASE WHEN name <> $1 AND $1 <> '' THEN $1 ELSE name END, "+
 			"description = CASE WHEN description <> $2 AND $2 <> '' THEN $2 ELSE description END, "+
@@ -95,4 +96,26 @@ func (fa *FilmRepository) Overwright(film *film.Film) error {
 	}
 
 	return nil
+}
+
+func (f *FilmRepository) FindByNamePart(namePart string) (*film.Film, error) {
+	film := &film.Film{}
+	err := f.st.db.QueryRow(
+		"SELECT id, name, description, release_date, assesment FROM films "+
+			"WHERE name LIKE '%' || $1 || '%'",
+		namePart,
+	).Scan(
+		&film.Id,
+		&film.Name,
+		&film.Desc,
+		&film.Date,
+		&film.Assesment,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return film, store.ErrRecordNotFound
+		}
+		return nil, err
+	}
+	return film, nil
 }
