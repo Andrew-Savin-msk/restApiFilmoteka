@@ -529,13 +529,23 @@ func (s *server) handleFindFilmByNamePart() http.Handler {
 
 // handleGetSortedFilms returns a list of films sorted by a specific criterion.
 func (s *server) handleGetSortedFilms() http.Handler {
+	type request struct {
+		SortParam string
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 			return
 		}
 
-		films, err := s.store.Film().FindAndSort("id")
+		req := &request{}
+		err := json.NewDecoder(r.Body).Decode(req)
+		if err != nil {
+			s.errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		films, err := s.store.Film().FindAndSort(req.SortParam)
 		if err != nil {
 			s.errorResponse(w, r, http.StatusBadRequest, err)
 			return
