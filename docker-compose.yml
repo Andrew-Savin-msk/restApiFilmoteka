@@ -14,14 +14,13 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-      
-
   app:
     build: .
     depends_on:
       db:
         condition: service_healthy
     environment:
+    # Set only if you want to choose spicific path
       CONFIG_PATH_DOCKER: configs/server_docker.toml
     ports:
       - "8081:8081"

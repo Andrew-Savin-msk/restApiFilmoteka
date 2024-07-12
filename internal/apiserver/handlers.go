@@ -32,6 +32,7 @@ var (
 	errMethodNotAllowed         = errors.New("unsuportable method type")
 )
 
+// handleCreateUser creates a new user.
 func (s *server) handleCreateUser() http.HandlerFunc {
 
 	type request struct {
@@ -68,6 +69,7 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 	}
 }
 
+// handleGetSession handles user login and creates a session.
 func (s *server) handleGetSession() http.HandlerFunc {
 	type request struct {
 		Email  string `json:"email"`
@@ -117,6 +119,7 @@ func (s *server) handleGetSession() http.HandlerFunc {
 
 }
 
+// handleWhoamI returns information about the currently authenticated user.
 func (s *server) handleWhoamI() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -134,6 +137,7 @@ func (s *server) handleWhoamI() http.HandlerFunc {
 	}
 }
 
+// handleCreateActor creates a new actor.
 func (s *server) handleCreateActor() http.HandlerFunc {
 	type request struct {
 		Name      string `json:"name"`
@@ -181,6 +185,7 @@ func (s *server) handleCreateActor() http.HandlerFunc {
 	}
 }
 
+// handleGetActor returns information about a specific actor by ID.
 func (s *server) handleGetActor() http.Handler {
 	type request struct {
 		Id int `json:"id"`
@@ -208,6 +213,7 @@ func (s *server) handleGetActor() http.Handler {
 	})
 }
 
+// handleDeleteActor deletes an actor by ID.
 func (s *server) handleDeleteActor() http.Handler {
 	type request struct {
 		Id int `json:"id"`
@@ -236,6 +242,7 @@ func (s *server) handleDeleteActor() http.Handler {
 	})
 }
 
+// handleOverwrightActor updates information about an existing actor by ID.
 func (s *server) handleOverwrightActor() http.Handler {
 	type request struct {
 		Id        int    `json:"id"`
@@ -308,7 +315,7 @@ func (s *server) handleOverwrightActor() http.Handler {
 	})
 }
 
-// TODO: Actors must be returned with their films
+// handleGetActors returns a list of all actors with their films.
 func (s *server) handleGetActors() http.Handler {
 	type respond struct {
 		Act   *actor.Actor `json:"actor"`
@@ -337,6 +344,7 @@ func (s *server) handleGetActors() http.Handler {
 	})
 }
 
+// handleCreateFilm creates a new film.
 func (s *server) handleCreateFilm() http.Handler {
 	type request struct {
 		Id        int     `json:"id"`
@@ -385,6 +393,7 @@ func (s *server) handleCreateFilm() http.Handler {
 	})
 }
 
+// handleDeleteFilm deletes a film by ID.
 func (s *server) handleDeleteFilm() http.Handler {
 	type request struct {
 		Id int `json:"id"`
@@ -412,7 +421,7 @@ func (s *server) handleDeleteFilm() http.Handler {
 	})
 }
 
-// TODO: This handler doesn't update info about actors binded to films, so fix it
+// handleOverwrightFilm updates information about an existing film by ID.
 func (s *server) handleOverwrightFilm() http.Handler {
 	type request struct {
 		Id        int     `json:"id"`
@@ -487,12 +496,13 @@ func (s *server) handleOverwrightFilm() http.Handler {
 	})
 }
 
+// handleFindFilmByNamePart finds a film by part of its name.
 func (s *server) handleFindFilmByNamePart() http.Handler {
 	type request struct {
 		NamePart string `json:"name_part"`
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPut && r.Method != http.MethodPatch {
+		if r.Method != http.MethodGet {
 			s.errorResponse(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 			return
 		}
@@ -517,6 +527,7 @@ func (s *server) handleFindFilmByNamePart() http.Handler {
 	})
 }
 
+// handleGetSortedFilms returns a list of films sorted by a specific criterion.
 func (s *server) handleGetSortedFilms() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
