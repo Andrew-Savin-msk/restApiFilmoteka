@@ -159,5 +159,5 @@ Configuration is managed via TOML files. The default configuration files are loc
 
 - **Get Sorted Films**
     - `GET /select-films`
-    - Request Body: `{ "sorting_parameter": "name" }`
+    - Request Body: `{ "sorting_parameter": "name/release_date/assesment" }`
     - Response: List of films sorted by criteria
