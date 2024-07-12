@@ -69,7 +69,7 @@ cd rest-api-filmoteka
 3. Run the migrations:
 
     ```bash
-    migrate -path migrations -database "postgres://postgres:your_password@localhost:5432/filmoteka?sslmode=disable" up
+    migrate -path migrations_docker -database "postgres://postgres:your_password@localhost:5432/filmoteka?sslmode=disable" up
     ```
 
 4. Run the API server:
