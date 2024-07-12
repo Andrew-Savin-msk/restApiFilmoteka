@@ -119,3 +119,28 @@ func (f *FilmRepository) FindByNamePart(namePart string) (*film.Film, error) {
 	}
 	return film, nil
 }
+
+func (f *FilmRepository) FindAndSort(field string) ([]*film.Film, error) {
+	films := []*film.Film{}
+	rows, err := f.st.db.Query(
+		"SELECT id, name, description, release_date, assesment FROM films "+
+			"ORDER BY $1 DESC "+
+			"LIMIT 5",
+		field,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var film film.Film
+		err = rows.Scan(&film.Id, &film.Name, &film.Desc, &film.Date, &film.Assesment)
+		if err != nil {
+			return nil, err
+		}
+		films = append(films, &film)
+	}
+
+	return films, nil
+}

@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/BurntSushi/toml"
 	"github.com/joho/godotenv"
@@ -17,18 +18,24 @@ type Config struct {
 	LogLevel   string `toml:"log_level"`
 }
 
-func Load(envPath string) *Config {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Unable to load .env with error: %s", err)
+func Load() *Config {
+
+	var envParamName = "DOCKER_CONFIG_PATH"
+	switch runtime.GOOS {
+	case "windows":
+		envParamName = "CONFIG_PATH"
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatalf("Unable to load .env with error: %s", err)
+		}
 	}
 
-	configPath := os.Getenv(envPath)
+	configPath := os.Getenv(envParamName)
 	if configPath == "" {
 		log.Fatal("Enviromental variable doen't exists!")
 	}
 
-	_, err = os.Stat(configPath)
+	_, err := os.Stat(configPath)
 	if err != nil {
 		log.Fatalf("Error with file stats: %s", err)
 	}

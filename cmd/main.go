@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	cfg := config.Load("CONFIG_PATH")
+	cfg := config.Load()
 	err := apiserver.Start(cfg)
 	if err != nil {
 		log.Fatalf("unable to start server. ended with error: %v", err)
