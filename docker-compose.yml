@@ -2,6 +2,7 @@ version: '3.8'
 services:
   db:
     image: postgres:13
+    hostname: db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Sassassa12
@@ -14,11 +15,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    volumes:
+      - ./migrations_docker/init.sql:/docker-entrypoint-initdb.d/init.sql
   app:
     build: .
     depends_on:
       db:
         condition: service_healthy
+    hostname: app
     environment:
     # Set only if you want to choose spicific path
       CONFIG_PATH_DOCKER: configs/server_docker.toml
