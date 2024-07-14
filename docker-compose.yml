@@ -5,7 +5,7 @@ services:
     hostname: db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Sassassa12
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: filmoteka
     ports:
       - "5432:5432"
